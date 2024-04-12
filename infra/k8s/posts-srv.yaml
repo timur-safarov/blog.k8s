@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: posts-srv
+spec: 
+  # Дополнительный порт, который случайно устанавливает kubectl при запуске сервиса 4000:30670
+  # Всё это можно увидеть через команду kubectl describe service [name service]
+  type: NodePort
+  selector:
+    # Ссылаемся тут на deployment файл spec->selector->matchLabels->app: posts
+    # Ссылаемся тут на deployment файл spec->template->metadata->labels->app: posts
+    app: posts
+  ports: 
+    - name: posts
+      protocol: TCP
+      # 4000 Это порт на котором у нас работает микросервис
+      # Для этого в React приложении мы указываем app.listen(4000, () => {});
+      # Port который запрашивается в браузере
+      port: 4000
+      # port целевой которй прослушивается в самом контейнере
+      targetPort: 4000

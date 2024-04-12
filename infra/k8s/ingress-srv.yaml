@@ -1,0 +1,102 @@
+# NGINX Ingress
+# https://kubernetes.github.io/ingress-nginx/user-guide/ingress-path-matching/
+
+# ingress-nginx — это контроллер Ingress для Kubernetes, 
+# использующий NGINX в качестве обратного прокси-сервера и балансировщика нагрузки.
+# https://github.com/kubernetes/ingress-nginx
+
+# Настройка yaml файлов
+# https://docs.nginx.com/nginx-ingress-controller/configuration/ingress-resources/basic-configuration/
+
+# Установка
+# https://kubernetes.github.io/ingress-nginx/deploy/
+
+# В прошлый раз ставил так
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+
+# И потом эта команда
+# minikube addons enable ingress
+# https://kubernetes.github.io/ingress-nginx/user-guide/ingress-path-matching/
+# Весрсия kubectl 1.21 и меньше apiVersion: networking.k8s.io/v1beta1
+# Весрсия kubectl 1.22 и больше apiVersion: networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+  annotations:
+    # Указываем что можно использовать рег выражения в path
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    # Весрсия kubectl 1.21 и меньше 
+    # kubernetes.io/ingress.class: nginx
+    # Указываем ssl сертификат
+    # cert-manager.io/issuer: "letsencrypt-staging"
+spec:
+  ingressClassName: nginx
+  # Можно указать tls если нужен https
+  # tls:
+  #   - hosts:
+  #     - posts.com
+  #     secretName: posts-com
+  rules:
+    - host: posts.com
+      http:
+        paths:
+            # path это конкретный URL путь в браузере
+          - path: /posts/create
+            pathType: Prefix
+            backend: 
+              # Сервис к которому мы подключаемся и его порт
+              # Весрсия kubectl 1.21 и меньше serviceName: posts-clusterip-srv
+              # Весрсия kubectl 1.21 и меньше servicePort: 4000
+              # Весрсия kubectl 1.22 и больше
+              # Тут мы указываем к какому сервисе и на каком порут будет обращаться
+              # страничка /posts/create
+              service:
+                name: posts-clusterip-srv
+                port:
+                  number: 4000
+            # path это конкретный URL путь в браузере
+          - path: /posts
+            pathType: Prefix
+            backend: 
+              # Сервис к которому мы подключаемся и его порт
+              # Весрсия kubectl 1.21 и меньше serviceName: posts-clusterip-srv
+              # Весрсия kubectl 1.21 и меньше servicePort: 4002
+              # Весрсия kubectl 1.22 и больше
+              # Тут мы указываем к какому сервисе и на каком порут будет обращаться
+              # страничка /posts
+              service:
+                name: query-srv
+                port:
+                  number: 4002
+            # Регулярка для URL адреса
+          - path: /posts/?(.*)/comments
+            # ImplementationSpecific - указываемтся для рег выражений
+            pathType: ImplementationSpecific
+            backend: 
+              # Сервис к которому мы подключаемся и его порт
+              # Весрсия kubectl 1.21 и меньше serviceName: posts-clusterip-srv
+              # Весрсия kubectl 1.21 и меньше servicePort: 4001
+              # Весрсия kubectl 1.22 и больше
+              # Тут мы указываем к какому сервисе и на каком порут будет обращаться
+              # страничка /posts/?(.*)/comments
+              service:
+                name: comments-srv
+                port:
+                  number: 4001
+            # Для одностраничков обычно используют такой path - path: /?(.*)
+            # Регулярка для начальной страницы
+          - path: /?(.*)
+            # ImplementationSpecific - указываемтся для рег выражений
+            pathType: ImplementationSpecific
+            backend: 
+              # Сервис к которому мы подключаемся и его порт
+              # Весрсия kubectl 1.21 и меньше serviceName: posts-clusterip-srv
+              # Весрсия kubectl 1.21 и меньше servicePort: 4001
+              # Весрсия kubectl 1.22 и больше
+              # Тут мы указываем к какому сервисе и на каком порут будет обращаться
+              # страничка /?(.*)
+              service:
+                name: client-srv
+                port:
+                  number: 3000

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comments-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comments
+  template:
+    metadata:
+      labels:
+        app: comments
+    spec:
+      containers:
+        - name: comments
+          image: jgslahrb/comments:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comments-srv
+spec:
+  selector:
+    # Ссылаемся тут на deployment выше spec->selector->matchLabels->app: comments
+    # Ссылаемся тут на deployment выше spec->template->metadata->labels->app: comments
+    app: comments
+  # NodePort - Дополнительный порт, который случайно устанавливает kubectl при запуске сервиса 4001:30670
+  # Всё это можно увидеть через команду kubectl describe service [name service]
+  # Если не указывать type - k8s создаст ClusterIP по умолчанию сам
+  # type: NodePort - можно указать промежуточный порт который может работать через port-forward
+  # type: ClusterIP
+  ports: 
+    - name: comments
+      protocol: TCP
+      # 4001 Это порт на котором у нас работает микросервис
+      # Для этого в React приложении мы указываем app.listen(4001, () => {});
+      # Port который запрашивается в браузере
+      port: 4001
+      # port целевой которй прослушивается в самом контейнере
+      targetPort: 4001
+
+

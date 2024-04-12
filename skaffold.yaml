@@ -1,0 +1,71 @@
+# skaffold
+# Заходим в корень проект где файл skaffold.yaml и запускаем команду skaffold dev
+# еСЛИ БУДУТ ошибки типа failed - запускаем 2 раза
+# skaffold dev
+# Теперь skaffold отслеживает изменения в файлах
+# Если yaml файлы для K8S были изменены или перезапущены, то команду skaffold dev нужно запускать заново
+
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      # Указываем тут файлы K8S
+      # Skaffold будет автоматически применять изменения в этих файлах
+      - ./infra/k8s/*
+build:
+  local:
+    # Говорим что docker push делать не нужно
+    push: false
+  artifacts:
+    # Указываем имя образа в Docker hub
+    - image: jgslahrb/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          # Указываем какие файлы нужно мониторить и отправлять в Docker hub автоматически
+          - src: 'src/**/*.js'
+            # В этой директории при изменении файлов нужно перезапускать установку пакетов
+            dest: .
+    - image: jgslahrb/comments
+      context: comments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '*.js'
+            dest: .
+    - image: jgslahrb/event-bus
+      context: event-bus
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '*.js'
+            dest: .
+    - image: jgslahrb/moderation
+      context: moderation
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '*.js'
+            dest: .
+    - image: jgslahrb/posts
+      context: posts
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '*.js'
+            dest: .
+    - image: jgslahrb/query
+      context: query
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: '*.js'
+            dest: .

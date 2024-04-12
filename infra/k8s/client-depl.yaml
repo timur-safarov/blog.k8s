@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: jgslahrb/client:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-srv
+spec:
+  selector:
+    # Ссылаемся тут на deployment выше spec->selector->matchLabels->app: client
+    # Ссылаемся тут на deployment выше spec->template->metadata->labels->app: client
+    app: client
+  # NodePort - Дополнительный порт, который случайно устанавливает kubectl при запуске сервиса 3000:30670
+  # Всё это можно увидеть через команду kubectl describe service [name service]
+  # Если не указывать type - k8s создаст ClusterIP по умолчанию сам
+  # type: NodePort - можно указать промежуточный порт который может работать через port-forward
+  # type: ClusterIP
+  ports: 
+    - name: client
+      protocol: TCP
+      # 3000 Это порт на котором у нас работает микросервис
+      # Для этого в React приложении мы указываем app.listen(3000, () => {});
+      # Port который запрашивается в браузере
+      port: 3000
+      # port целевой которй прослушивается в самом контейнере
+      targetPort: 3000
